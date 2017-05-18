@@ -1,1 +1,3 @@
-# Next_DirectX_Practice
+## Next_DirectX_Practice
+
+- 
