@@ -1,0 +1,12 @@
+﻿빌드 시작: 2017-03-28 오전 10:43:12
+     1>2 노드의 "C:\Users\현우\Documents\Visual Studio 2013\Projects\0.AlphaBlending_작업용프로젝트\Win32Project2.vcxproj" 프로젝트(Build 대상)입니다.
+     1>FxCompile:
+         C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Utilities\bin\x86\fxc.exe /nologo /E"main" /T fx_4_0 /Fo "C:\Users\현우\Documents\Visual Studio 2013\Projects\0.AlphaBlending_작업용프로젝트\Debug\MyShader.cso" /Od /Zi MyShader.fx 
+         failed writing C:\Users\Co��i\Documents\Visual Studio 2013\Projects\0.AlphaBlending_AU������eCA��IA�ר���\Debug\MyShader.cso
+       Link:
+         Win32Project2.vcxproj -> C:\Users\현우\Documents\Visual Studio 2013\Projects\0.AlphaBlending_작업용프로젝트\Debug\Win32Project2.exe
+     1>"C:\Users\현우\Documents\Visual Studio 2013\Projects\0.AlphaBlending_작업용프로젝트\Win32Project2.vcxproj" 프로젝트를 빌드했습니다(Build 대상).
+
+빌드했습니다.
+
+경과 시간: 00:00:00.17

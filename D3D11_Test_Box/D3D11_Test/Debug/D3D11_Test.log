@@ -1,0 +1,12 @@
+﻿빌드 시작: 2017-04-18 오전 11:19:18
+     1>2 노드의 "C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test\D3D11_Test\D3D11_Test.vcxproj" 프로젝트(Build 대상)입니다.
+     1>FxCompile:
+         C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Utilities\bin\x86\fxc.exe /nologo /E"main" /T fx_4_0 /Fo "C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test\Debug\color.cso" /Od /Zi "..\..\..\..\..\Desktop\NHN NEXT\_2016 HDP\d3d11CodeSet1\Chapter 6 Drawing in Direct3D\Box\FX\color.fx" 
+         failed writing C:\Users\Co��i\Documents\Visual Studio 2013\Projects\D3D11_Test\Debug\color.cso
+       Link:
+         D3D11_Test.vcxproj -> C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test\Debug\D3D11_Test.exe
+     1>"C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test\D3D11_Test\D3D11_Test.vcxproj" 프로젝트를 빌드했습니다(Build 대상).
+
+빌드했습니다.
+
+경과 시간: 00:00:02.03
