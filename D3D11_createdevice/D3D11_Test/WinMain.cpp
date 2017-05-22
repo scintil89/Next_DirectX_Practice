@@ -299,9 +299,9 @@ void CreateVertexBuffer()
 		{ XMFLOAT3(0.5f, -0.5f, 1.0f) }, //2
 		{ XMFLOAT3(-0.5f, -0.5f, 1.0f) }, //3
 
-		//{ XMFLOAT3(0.5f, -0.5f, 1.0f) }, //2
-		//{ XMFLOAT3(-0.5f, 0.5f, 1.0f) }, //1
-		//{ XMFLOAT3(0.5f, 0.5f, 1.0f) }, //4
+		{ XMFLOAT3(0.5f, -0.5f, 1.0f) }, //2
+		{ XMFLOAT3(-0.5f, 0.5f, 1.0f) }, //1
+		{ XMFLOAT3(0.5f, 0.5f, 1.0f) }, //4
 		//
 		//{ XMFLOAT3(-0.5f, 0.5f, 1.0f) },
 		//{ XMFLOAT3(0.5f, 0.5f, 1.0f) },
