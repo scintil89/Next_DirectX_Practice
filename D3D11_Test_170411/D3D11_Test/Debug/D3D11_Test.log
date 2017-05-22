@@ -1,10 +1,10 @@
-﻿빌드 시작: 2017-04-11 오후 1:24:27
+﻿빌드 시작: 2017-05-23 오전 6:48:34
      1>2 노드의 "C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\D3D11_Test\D3D11_Test.vcxproj" 프로젝트(Build 대상)입니다.
      1>FxCompile:
          C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Utilities\bin\x86\fxc.exe /nologo /E"main" /T fx_4_0 /Fo "C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\Debug\MyShader.cso" /Od /Zi MyShader.fx 
          failed writing C:\Users\Co��i\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\Debug\MyShader.cso
        ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt "..\..\..\..\..\Desktop\NHN NEXT\_2016 HDP\dx\0406\WinMain.cpp"
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt WinMain.cpp
          WinMain.cpp
      1>c:\program files (x86)\microsoft directx sdk (june 2010)\include\dxgitype.h(12): warning C4005: 'DXGI_STATUS_OCCLUDED' : 매크로 재정의
                  c:\program files (x86)\windows kits\8.1\include\shared\winerror.h(50092) : 'DXGI_STATUS_OCCLUDED'의 이전 정의를 참조하십시오.
@@ -62,7 +62,6 @@
                  c:\program files (x86)\windows kits\8.1\include\shared\winerror.h(50445) : 'D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS'의 이전 정의를 참조하십시오.
      1>c:\program files (x86)\microsoft directx sdk (june 2010)\include\d3d10.h(609): warning C4005: 'D3D10_ERROR_FILE_NOT_FOUND' : 매크로 재정의
                  c:\program files (x86)\windows kits\8.1\include\shared\winerror.h(50454) : 'D3D10_ERROR_FILE_NOT_FOUND'의 이전 정의를 참조하십시오.
-     1>c:\users\현우\desktop\nhn next\_2016 hdp\dx\0406\winmain.cpp(104): warning C4715: 'LoadTexture' : 모든 제어 경로에서 값을 반환하지는 않습니다.
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\Debug\D3D11_Test.exe" /INCREMENTAL /NOLOGO d3d11.lib d3dx11d.lib D3DCompiler.lib Effects11d.lib dxerr.lib dxgi.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\Debug\D3D11_Test.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_Test_170411\Debug\D3D11_Test.lib" /MACHINE:X86 Debug\Camera.obj
          Debug\d3dApp.obj
@@ -82,4 +81,4 @@
 
 빌드했습니다.
 
-경과 시간: 00:00:01.43
+경과 시간: 00:00:01.24
