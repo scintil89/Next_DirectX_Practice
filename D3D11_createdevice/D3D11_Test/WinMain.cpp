@@ -1,168 +1,38 @@
 #include <windows.h>
 #include <time.h>
 
-//////////////////////////////////////////////////////////////////////////
-//DirectX 11 header
 #include <dxgi.h>
 #include <d3d11.h>
 #include <d3dCompiler.h>
 #include <d3dx11.h>
 #include <dxerr.h>
+
 #include <xnamath.h>
-//////////////////////////////////////////////////////////////////////////
 
-#define szWindowClass	TEXT("First")
-#define szTitle			TEXT("First App")
+#define szWindowClass	TEXT("01 Create Device")
+#define szTitle			TEXT("01 Create Device")
 
-XMFLOAT4 lightDirection = { XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), };
-XMFLOAT4 lightColor = { XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f), };
+LRESULT CALLBACK WndProc(HWND hWnd
+	, UINT message
+	, WPARAM wParam
+	, LPARAM lParam);
 
 struct MyVertex
 {
 	XMFLOAT3	pos;
-	XMFLOAT4	color;
-
-	XMFLOAT3	normal;
-
-	XMFLOAT2	tex;
 };
 
-struct	 ConstantBuffer
-{
-	XMMATRIX	wvp;
-	XMMATRIX	world;
+HWND					g_hWnd = NULL;
+IDXGISwapChain*			g_pSwapChain = NULL;
+ID3D11Device*			g_pd3dDevice = NULL;
+ID3D11DeviceContext*	g_pImmediateContex = NULL; //d3dc
+ID3D11RenderTargetView*	g_pRenderTargetView = NULL;
+D3D_FEATURE_LEVEL		g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 
-	XMFLOAT4	lightDir;
-	XMFLOAT4	lightColor;
-};
-//////////////////////////////////////////////////////////////////////////
-//전역변수
-//////////////////////////////////////////////////////////////////////////
-HWND					g_hWnd;
-IDXGISwapChain*			g_pSwapChain;
-ID3D11Device*			g_pd3dDevice;
-ID3D11DeviceContext*	g_pImmediateContext; //d3dc
-ID3D11RenderTargetView*	g_pRenderTargetView;
-D3D_FEATURE_LEVEL		g_featureLevel;
-//////////////////////////////////////////////////////////////////////////
-ID3D11VertexShader*		g_pVertexShader;	
-ID3D11InputLayout*		g_pVertexLayout;
-ID3D11PixelShader*		g_pPixelShader;
-//////////////////////////////////////////////////////////////////////////
+ID3D11VertexShader*		g_pVertexShader = NULL;
+ID3D11InputLayout*		g_pVertexLayout = NULL;
+ID3D11PixelShader*		g_pPixelShader = NULL;
 ID3D11Buffer*			g_pVertexBuffer;
-ID3D11Buffer*			g_pIndexBuffer;
-//////////////////////////////////////////////////////////////////////////
-ID3D11Buffer*			g_pConstantBuffer;
-//////////////////////////////////////////////////////////////////////////
-ID3D11Texture2D*		g_pDepthStencil = NULL;
-ID3D11DepthStencilView*	g_pDepthStencilView = NULL;
-//////////////////////////////////////////////////////////////////////////
-ID3D11RasterizerState*	g_pSolidRS;
-ID3D11RasterizerState*	g_pWireRS;
-//////////////////////////////////////////////////////////////////////////
-ID3D11ShaderResourceView*	g_pTextureRV = NULL;	//texture
-ID3D11SamplerState*			g_pSamplerLinear = NULL; //SampleState
-
-
-XMMATRIX                g_World;
-XMMATRIX                g_World2;
-XMMATRIX                g_View;
-XMMATRIX                g_Projection;
-
-//////////////////////////////////////////////////////////////////////////
-//Create Grid
-int vertexCount = 100; //가로 / 세로의 버텍스 개수
-int numVertices = 10000;
-int indexSize = 0;
-ID3D11Buffer*			g_pHeightMapVertexBuffer;
-ID3D11Buffer*			g_pHeightMapIndexBuffer;
-
-void CreateHeightMapVB()
-{
-	MyVertex* heightmapVertex = new MyVertex[numVertices];
-
-	for (int z = 0; z < vertexCount; ++z)
-	{
-		for (int x = 0; x < vertexCount; ++x)
-		{
-			int idx = x + (z * (vertexCount));
-			heightmapVertex[idx].pos = XMFLOAT3(x, sinf(x), z);
-			heightmapVertex[idx].color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-			heightmapVertex[idx].tex = XMFLOAT2(x / (float)(vertexCount - 1), z / (float)(vertexCount - 1));
-		}
-	}
-
-	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-	bd.ByteWidth = sizeof(MyVertex) * numVertices;
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA initData;
-	ZeroMemory(&initData, sizeof(initData));
-	initData.pSysMem = heightmapVertex;
-	g_pd3dDevice->CreateBuffer(&bd, &initData, &g_pHeightMapVertexBuffer);
-
-	if (heightmapVertex)
-	{
-		delete heightmapVertex;
-		heightmapVertex = nullptr;
-	}
-}
-
-void CreateHeightMapIB()
-{
-	int triangleCount = (vertexCount - 1) * (vertexCount - 1) * 2; //삼각형 개수
-	indexSize = triangleCount * 3;
-	UINT* indices = new UINT[indexSize];
-
-	int baseIndex = 0;
-	int _numVertsPerRow = vertexCount;
-
-	for (int z = 0; z < _numVertsPerRow - 1; ++z)
-	{
-		for (int x = 0; x < _numVertsPerRow - 1; ++x)
-		{
-			indices[baseIndex]			=	z		*	_numVertsPerRow + x;	// 0
-			indices[baseIndex + 2]		=	z		*	_numVertsPerRow + x + 1;	// 3
-			indices[baseIndex + 1]		=	(z + 1)	*	_numVertsPerRow + x;	// 1
-
-			indices[baseIndex + 3]		=	(z + 1) *	_numVertsPerRow + x;	// 3
-			indices[baseIndex + 5]		=	z		*	_numVertsPerRow + x + 1; // 4
-			indices[baseIndex + 4]		=	(z + 1) *	_numVertsPerRow + x + 1; //1
-
-			baseIndex += 6;
-		}
-	}
-
-	D3D11_BUFFER_DESC ibd;
-	ZeroMemory(&ibd, sizeof(ibd));
-	ibd.ByteWidth = sizeof(UINT) * indexSize;
-	ibd.Usage = D3D11_USAGE_IMMUTABLE; //cpu접근 불가 생성후 변경 불가. gpu만 접근 가능
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA		initData;
-	ZeroMemory(&initData, sizeof(initData));
-	initData.pSysMem = indices;
-	g_pd3dDevice->CreateBuffer(&ibd, &initData, &g_pHeightMapIndexBuffer);
-
-	if (indices)
-	{
-		delete indices;
-		indices = nullptr;
-	}
-}
-
-void CreateDepthStencilTexture();
-
-LRESULT CALLBACK WndProc(
-	HWND hWnd,
-	UINT message,
-	WPARAM wParam,
-	LPARAM lParam
-	);
 
 HRESULT initDevice()
 {
@@ -210,7 +80,7 @@ HRESULT initDevice()
 		&g_pSwapChain,				//생성된 SwapChain
 		&g_pd3dDevice,				//생성된 device
 		&g_featureLevel,			//사용된 featireLevel
-		&g_pImmediateContext			//DC
+		&g_pImmediateContex			//DC
 		);
 
 	if (FAILED(hr))
@@ -243,14 +113,10 @@ HRESULT initDevice()
 		return hr;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	CreateDepthStencilTexture();
-	//////////////////////////////////////////////////////////////////////////
-
-	g_pImmediateContext->OMSetRenderTargets(
+	g_pImmediateContex->OMSetRenderTargets(
 		1,						//렌더 대상 개수. 장면 분할시 1 초과
 		&g_pRenderTargetView,	//렌더 타겟
-		g_pDepthStencilView		//깊이/스텐실 버퍼
+		NULL					//깊이/스텐실 버퍼
 		);
 
 	D3D11_VIEWPORT		vp;
@@ -261,89 +127,44 @@ HRESULT initDevice()
 	vp.TopLeftX = 0;		//그리기 시작 원점 x
 	vp.TopLeftY = 0;		//그리기 시작 원점 y
 
-	g_pImmediateContext->RSSetViewports(1, &vp); //레스터라이즈
+	g_pImmediateContex->RSSetViewports(1, &vp); //레스터라이즈
 
-	return S_OK;
 }
 
-HRESULT LoadTexture()
+void Render()
 {
-	HRESULT hr = D3DX11CreateShaderResourceViewFromFile(
-		g_pd3dDevice,
-		L"Texture/heightmap.jpg",
-		NULL,
-		NULL,
-		&g_pTextureRV,
-		NULL
-		);
+	//just clear the backbuffer
+	float clearColor[4] = { 0.8f, 0.2f, 0.2f, 1.0f }; // rgbm alpha >> 배경화면 초기화
 
-	if (FAILED(hr))
-	{
-		return hr;
-	}
+	//Clear
+	g_pImmediateContex->ClearRenderTargetView(g_pRenderTargetView, clearColor);
 
-	D3D11_SAMPLER_DESC		sampDesc;
-	ZeroMemory(&sampDesc, sizeof(sampDesc));
-	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;	//선형 보간 밉 레벨 필터링.
-	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;		//U좌표 address mode
-	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;		//v좌표 address mode
-	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;		//W좌표 address mode
-	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;	//샘플링 데이터 비교 안함
-	sampDesc.MinLOD = 0;								//최소 Mipmap Range
-	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;				//최대 Mipmap Range
+	//////////////////////////////////////////////////////////////////////////
+	//폴리곤 그리는 부분
+	//////////////////////////////////////////////////////////////////////////
 
-	hr = g_pd3dDevice->CreateSamplerState(&sampDesc, &g_pSamplerLinear);	//SamplerState 생성
+	//set input assembler
+	g_pImmediateContex->IASetInputLayout(g_pVertexLayout);
+	g_pImmediateContex->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	if (FAILED(hr))
-	{
-		return hr;
-	}
+	UINT stride = sizeof(MyVertex);
+	UINT offset = 0;
+	g_pImmediateContex->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 
-	return S_OK;
-}
+	//set Shader and Draw
+	g_pImmediateContex->VSSetShader(g_pVertexShader, NULL, 0);
+	g_pImmediateContex->PSSetShader(g_pPixelShader, NULL, 0);
+	g_pImmediateContex->Draw(6, 0);		//index를 쓰지 않는 그리기 함수
 
-void InitMatrix()
-{
-	// World 행렬 초기화
-	g_World = XMMatrixIdentity();
-
-	// View 행렬 구성
-	XMVECTOR 	pos = XMVectorSet(-20.0f, 45.0f, 10.0f, 1.0f);
-	XMVECTOR 	target = XMVectorSet(50.0f, 0.0f, 50.0f, 0.0f);	
-	XMVECTOR 	up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	g_View = XMMatrixLookAtLH(pos, target, up);
-
-	// Projection 행렬
-	g_Projection = XMMatrixPerspectiveFovLH(XM_PIDIV2,  	// pi
-		800.0f / (FLOAT)600.0f,  // aspect ratio
-		0.01f, 1000.0f);  	// near plane, far plane
+	//Render (백버퍼를 프론트버퍼로 그린다.
+	g_pSwapChain->Present(0, 0); //다 그렸으니 즉시 교체
 }
 
 void CleanupDevice()
 {
-	if (g_pIndexBuffer)
+	if (g_pImmediateContex)
 	{
-		g_pIndexBuffer->Release();
-	}
-
-	if (g_pRenderTargetView)
-	{
-		g_pRenderTargetView->Release();
-	}
-
-	if (g_pImmediateContext)
-	{
-		g_pImmediateContext->ClearState();
-	}
-
-	if (g_pSwapChain)
-	{
-		g_pSwapChain->Release();
-	}
-
-	if (g_pd3dDevice)
-	{
-		g_pd3dDevice->Release();
+		g_pImmediateContex->ClearState();
 	}
 
 	if (g_pRenderTargetView)
@@ -356,35 +177,14 @@ void CleanupDevice()
 		g_pSwapChain->Release();
 	}
 
-	if (g_pImmediateContext)
-	{
-		g_pImmediateContext->Release();
-	}
-
 	if (g_pd3dDevice)
 	{
 		g_pd3dDevice->Release();
 	}
-
-	if (g_pConstantBuffer)
-	{
-		g_pConstantBuffer->Release();
-	}
-
-	if (g_pTextureRV)
-	{
-		g_pTextureRV->Release();
-	}
-
-	if (g_pSamplerLinear)
-	{
-		g_pSamplerLinear->Release();
-	}
-
 }
 
 void CreateShader()
-{	
+{
 	//////////////////////////////////////////////////////////////////////////
 	//	vertex shader
 	//////////////////////////////////////////////////////////////////////////
@@ -415,12 +215,9 @@ void CreateShader()
 		return;
 	}
 
-	D3D11_INPUT_ELEMENT_DESC layout[] = {
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
-			//28대신 d3d11_append_aligned_element
+	D3D11_INPUT_ELEMENT_DESC layout[] = 
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	UINT numElements = ARRAYSIZE(layout);
@@ -476,36 +273,19 @@ void CreateVertexBuffer()
 	//////////////////////////////////////////////////////////////////////////
 	//꼭지점 만들기
 	//////////////////////////////////////////////////////////////////////////
-
-	/*
 	MyVertex vertices[] = {
-	// 		{ XMFLOAT3(-0.5f, 0.5f, 1.0f)	}, //1
-	// 		{ XMFLOAT3(0.5f, -0.5f, 1.0f)	}, //2
-	// 		{ XMFLOAT3(-0.5f, -0.5f, 1.0f)	}, //3
-	//
-	// 		{ XMFLOAT3(0.5f, -0.5f, 1.0f)	}, //2
-	// 		{ XMFLOAT3(-0.5f, 0.5f, 1.0f)	}, //1
-	// 		{ XMFLOAT3(0.5f, 0.5f, 1.0f)	}, //4
+		{ XMFLOAT3(-0.5f, 0.5f, 1.0f) }, //1
+		{ XMFLOAT3(0.5f, -0.5f, 1.0f) }, //2
+		{ XMFLOAT3(-0.5f, -0.5f, 1.0f) }, //3
 
-	{ XMFLOAT3(-0.5f, 0.5f, 1.0f), XMFLOAT4(0.8f, 0.0f, 0.2f, 1.0f) },
-	{ XMFLOAT3(0.5f, 0.5f, 1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-	{ XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-	{ XMFLOAT3(-0.5f, -0.5f, 1.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
+		//{ XMFLOAT3(0.5f, -0.5f, 1.0f) }, //2
+		//{ XMFLOAT3(-0.5f, 0.5f, 1.0f) }, //1
+		//{ XMFLOAT3(0.5f, 0.5f, 1.0f) }, //4
+		//
+		//{ XMFLOAT3(-0.5f, 0.5f, 1.0f) },
+		//{ XMFLOAT3(0.5f, 0.5f, 1.0f) },
+		//{ XMFLOAT3(0.5f, -0.5f, 1.0f) },
 	};
-	*/
-
-	MyVertex vertices[] =
-	{
-		{ XMFLOAT3(-1.0f, 1.0f, -1.0f),		XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),	XMFLOAT3(-0.33f, 0.33f, -0.33f)	, XMFLOAT2(1.0f, 1.0f)	},
-		{ XMFLOAT3(1.0f, 1.0f, -1.0f),		XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),	XMFLOAT3(0.33f, 0.33f, -0.33f)	, XMFLOAT2(0.0f, 1.0f)	},
-		{ XMFLOAT3(1.0f, 1.0f, 1.0f),		XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f),	XMFLOAT3(0.33f, 0.33f, 0.33f)	, XMFLOAT2(0.0f, 0.0f)	}, 
-		{ XMFLOAT3(-1.0f, 1.0f, 1.0f),		XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),	XMFLOAT3(-0.33f, 0.33f, 0.33f)	, XMFLOAT2(1.0f, 0.0f)	},
-		{ XMFLOAT3(-1.0f, -1.0f, -1.0f),	XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f),	XMFLOAT3(-0.33f, -0.33f, -0.33f), XMFLOAT2(0.0f, 0.0f)	},
-		{ XMFLOAT3(1.0f, -1.0f, -1.0f),		XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f),	XMFLOAT3(0.33f, -0.33f, 0.33f)	, XMFLOAT2(1.0f, 0.0f)	},
-		{ XMFLOAT3(1.0f, -1.0f, 1.0f),		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	XMFLOAT3(0.33f, -0.33f, 0.33f)	, XMFLOAT2(1.0f, 1.0f)	},
-		{ XMFLOAT3(-1.0f, -1.0f, 1.0f),		XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f),	XMFLOAT3(-0.33f, -0.33f, 0.33f)	, XMFLOAT2(0.0f, 1.0f)	},
-	};
-
 
 	D3D11_BUFFER_DESC		bd;
 	ZeroMemory(&bd, sizeof(bd));
@@ -524,238 +304,19 @@ void CreateVertexBuffer()
 		&initData,			//버퍼 초기화시 필요한 데이터
 		&g_pVertexBuffer	//생성된 버퍼
 		);
-
 	if (FAILED(hr))
 	{
 		return;
 	}
 }
 
-void CreateIndexBuffer()
-{
-	// 	UINT	indices[] =
-	// 	{
-	// 		0, 1, 2, //삼각형0
-	// 		0, 2, 3	//삼각형 1
-	// 	};
-
-	UINT indices[] =
-	{
-		3, 1, 0,
-		2, 1, 3,
-		0, 5, 4,
-		1, 5, 0,
-		3, 4, 7,
-		0, 4, 3,
-		1, 6, 5,
-		2, 6, 1,
-		2, 7, 6,
-		3, 7, 2,
-		6, 4, 5,
-		7, 4, 6,
-	};
-
-	D3D11_BUFFER_DESC ibd;
-	ZeroMemory(&ibd, sizeof(ibd));
-	ibd.ByteWidth = sizeof(indices); //sizeof(uint)*6
-	ibd.Usage = D3D11_USAGE_IMMUTABLE; //cpu접근 불가 생성후 변경 불가. gpu만 접근 가능
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA		initData;
-	ZeroMemory(&initData, sizeof(initData));
-	initData.pSysMem = indices;
-	g_pd3dDevice->CreateBuffer(&ibd, &initData, &g_pIndexBuffer);
-}
-
-void CreateConstantBuffer()
-{
-	D3D11_BUFFER_DESC 	cbd;
-	ZeroMemory(&cbd, sizeof(cbd));
-	cbd.Usage = D3D11_USAGE_DEFAULT;
-	cbd.ByteWidth = sizeof(ConstantBuffer);
-	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbd.CPUAccessFlags = 0;
-
-	g_pd3dDevice->CreateBuffer(&cbd, NULL, &g_pConstantBuffer);
-}
-
-void CalculateMatrixForBox(float deltaTime)
-{
-	// 박스를 회전시키기 위한 연산.    위치, 크기를 변경하고자 한다면 SRT를 기억할 것.
-
-	XMMATRIX mat = XMMatrixRotationY(deltaTime);
-	mat *= XMMatrixRotationX(-deltaTime);
-	g_World = mat;
-
-	XMMATRIX wvp = g_World * g_View * g_Projection;
-
-	ConstantBuffer       cb;
-	cb.wvp = XMMatrixTranspose(wvp);
-
-	cb.world = XMMatrixTranspose(g_World);
-	cb.lightDir = lightDirection;
-	cb.lightColor = lightColor;
-
-	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, 0, &cb, 0, 0); // update data
-	g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);// set constant buffer.
-
-	g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-}
-
-void CalculateMatrixForBox2(float deltaTime)
-{
-	float scaleValue = sinf(deltaTime)*0.5f + 1;
-	XMMATRIX scale = XMMatrixScaling(scaleValue, scaleValue, scaleValue);	//scale
-	XMMATRIX rotate = XMMatrixRotationZ(deltaTime);							//rotate
-	float moveValue = cosf(deltaTime)*5.0f;									//move position
-	XMMATRIX position = XMMatrixTranslation(moveValue, 0.0f, 0.0f);
-	g_World2 = scale * rotate * position; //SRT. OPENGL은 TRS
-
-	XMMATRIX wvp = g_World2 * g_View * g_Projection;
-	ConstantBuffer       cb;
-	cb.wvp = XMMatrixTranspose(wvp);
-
-	cb.world = XMMatrixTranspose(g_World2);
-	cb.lightDir = lightDirection;
-	cb.lightColor = lightColor;
-
-	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, 0, &cb, 0, 0); // update data
-	g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);// set constant buffer.
-
-	g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-}
-
-void CalcMatrixForHeightMap(float deltaTime)
-{
-	XMMATRIX mat = XMMatrixRotationY(0.0f);
-	g_World = mat;
-
-	XMMATRIX wvp = g_World * g_View * g_Projection;
-
-	ConstantBuffer       cb;
-	cb.wvp = XMMatrixTranspose(wvp);
-	cb.world = XMMatrixTranspose(g_World);
-	cb.lightDir = lightDirection;
-	cb.lightColor = lightColor;
-
-	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, 0, &cb, 0, 0); // update data
-	g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);// set constant buffer.
-	g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-}
-
-void CreateDepthStencilTexture()
-{
-	//create depth stencil texture
-	D3D11_TEXTURE2D_DESC	descDepth;
-	ZeroMemory(&descDepth, sizeof(descDepth));
-	descDepth.Width = 800;
-	descDepth.Height = 600;
-	descDepth.MipLevels = 1;
-	descDepth.ArraySize = 1;
-	descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	descDepth.SampleDesc.Count = 1;
-	descDepth.SampleDesc.Quality = 0;
-	descDepth.Usage = D3D11_USAGE_DEFAULT;
-	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	descDepth.CPUAccessFlags = 0;
-	descDepth.MiscFlags = 0;
-
-	g_pd3dDevice->CreateTexture2D(&descDepth, NULL, &g_pDepthStencil);
-
-	//create the depth stencil view
-	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
-	ZeroMemory(&descDSV, sizeof(descDSV));
-	descDSV.Format = descDepth.Format;
-			// == DXGI_FORMAT_D24_UNORM_S8_UNIT
-	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	descDSV.Texture2D.MipSlice = 0;
-	descDSV.Flags = 0;
-	g_pd3dDevice->CreateDepthStencilView(g_pDepthStencil, &descDSV, &g_pDepthStencilView);
-
-}
-
-void CreateRenderState()
-{
-	D3D11_RASTERIZER_DESC rasterizerDesc;
-	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID;		//fill 옵션
-	rasterizerDesc.CullMode = D3D11_CULL_FRONT;		//back | 컬링 옵션
-	rasterizerDesc.FrontCounterClockwise = true;	//앞/뒷면 로직 선택
-
-	g_pd3dDevice->CreateRasterizerState(&rasterizerDesc, &g_pSolidRS);
-}
-
-void CreateRenderState2()
-{
-	D3D11_RASTERIZER_DESC rasterizerDesc;
-	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-	rasterizerDesc.FillMode = D3D11_FILL_SOLID;		//fill 옵션
-	rasterizerDesc.CullMode = D3D11_CULL_FRONT;		//back | 컬링 옵션
-	rasterizerDesc.FrontCounterClockwise = true;	//앞/뒷면 로직 선택
-
-	g_pd3dDevice->CreateRasterizerState(&rasterizerDesc, &g_pWireRS);
-}
-
-void Render(float deltaTime)
-{
-	float ClearColor[4] = { 0.0f, 0.3f, 0.3f, 1.0f };
-
-	g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, ClearColor);
-
-	g_pImmediateContext->ClearDepthStencilView(
-		g_pDepthStencilView,	//clear target
-		D3D11_CLEAR_DEPTH,		//clear flag(depth, stencil)
-		1.0f,					//depth buffer 지울 때 채울값
-		0);						//stencil buffer 지울 때 초기값	
-
-
-	g_pImmediateContext->IASetInputLayout(g_pVertexLayout);
-	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	UINT stride = sizeof(MyVertex);
-	UINT offset = 0;
-
-	
-	g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
-	g_pImmediateContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	g_pImmediateContext->VSSetShader(g_pVertexShader, NULL, 0);
-	g_pImmediateContext->PSSetShader(g_pPixelShader, NULL, 0);
-
-	//////////////////////////////////////////////////////////////////////////
-	//계산 및 그리기
-	//////////////////////////////////////////////////////////////////////////
-	//텍스쳐
-	g_pImmediateContext->PSSetShaderResources(0, 1, &g_pTextureRV);
-	g_pImmediateContext->PSSetSamplers(0, 1, &g_pSamplerLinear);
-
-	//////////////////////////////////////////////////////////////////////////
-// 	g_pImmediateContext->RSSetState(g_pSolidRS);
-// 	CalculateMatrixForBox(deltaTime);
-// 	g_pImmediateContext->DrawIndexed(36, 0, 0);
-
-	//////////////////////////////////////////////////////////////////////////
-//  	g_pImmediateContext->RSSetState(g_pWireRS);
-//  	CalculateMatrixForBox2(deltaTime);
-//  	g_pImmediateContext->DrawIndexed(36, 0, 0);
-	
-
-	g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pHeightMapVertexBuffer, &stride, &offset);
-
-	g_pImmediateContext->IASetIndexBuffer(g_pHeightMapIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	CalcMatrixForHeightMap(deltaTime); //지형에 관련한 matrix 연산
-	
-	g_pImmediateContext->DrawIndexed(indexSize, 0, 0);
-
-	g_pSwapChain->Present(0, 0);
-}
-
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-	LPSTR lpszCmdParam, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpszCmdParam,
+	int nCmdShow)
 {
 	WNDCLASSEX wcex;
+
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = (WNDPROC)WndProc;
@@ -791,19 +352,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	ShowWindow(hWnd, nCmdShow);
 
 	g_hWnd = hWnd;
-
 	initDevice();
-	LoadTexture();
-	CreateRenderState();
-	CreateRenderState2();
-	InitMatrix();
 	CreateShader();
 	CreateVertexBuffer();
-	CreateIndexBuffer();
-	CreateHeightMapVB();
-	CreateHeightMapIB();
-	CreateConstantBuffer();
-
 
 	MSG			msg;
 
@@ -811,18 +362,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	{
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
-			if (WM_QUIT == msg.message)
+			if (msg.message == WM_QUIT)
 				break;
+
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 		else
 		{
-			static float deltaTime = 0;	
-			deltaTime += 0.00019f;
-			// GetDeltaTime이 없으면 0.00005f등의 작은수를 쓸 것.
-
-			Render(deltaTime);
+			Render();
 		}
 	}
 
@@ -851,7 +399,7 @@ LRESULT CALLBACK WndProc(HWND hWnd
 
 		EndPaint(hWnd, &ps);
 	}
-		break;
+	break;
 
 	case WM_DESTROY:
 		PostQuitMessage(0);

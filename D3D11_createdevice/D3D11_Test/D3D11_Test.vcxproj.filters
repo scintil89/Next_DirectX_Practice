@@ -51,7 +51,7 @@
     <ClCompile Include="..\..\..\..\..\Desktop\NHN NEXT\_2016 HDP\d3d11CodeSet1\Common\xnacollision.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\D3D11_Test_170318\D3D11_Test\WinMain.cpp">
+    <ClCompile Include="WinMain.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
