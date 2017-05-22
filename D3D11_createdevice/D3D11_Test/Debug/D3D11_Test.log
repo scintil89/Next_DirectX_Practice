@@ -1,4 +1,4 @@
-﻿빌드 시작: 2017-05-23 오전 2:03:37
+﻿빌드 시작: 2017-05-23 오전 2:16:05
      1>2 노드의 "C:\Users\현우\Documents\Visual Studio 2013\Projects\D3D11_createdevice\D3D11_Test\D3D11_Test.vcxproj" 프로젝트(Build 대상)입니다.
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(388,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (D3D11_Test.vcxproj).  This can lead to incorrect clean and rebuild behavior.
      1>FxCompile:
@@ -10,4 +10,4 @@
 
 빌드했습니다.
 
-경과 시간: 00:00:00.16
+경과 시간: 00:00:00.13

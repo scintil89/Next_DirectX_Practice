@@ -181,6 +181,27 @@ void CleanupDevice()
 	{
 		g_pd3dDevice->Release();
 	}
+
+	if (g_pVertexBuffer)
+	{
+		g_pVertexBuffer->Release();
+	}
+
+	if (g_pVertexLayout)
+	{
+		g_pVertexLayout->Release();
+	}
+
+	if (g_pVertexShader)
+	{
+		g_pVertexShader->Release();
+	}
+
+
+	if (g_pPixelShader)
+	{
+		g_pPixelShader->Release();
+	}
 }
 
 void CreateShader()
