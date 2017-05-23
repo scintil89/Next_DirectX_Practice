@@ -13,7 +13,7 @@
   : RendetState
   
 - D3D11_Test_170411_Lighting
-  : Lighting
+  : Lighting, Lambert, halfLambert
   
 - D3D11_Test_170418
   : Heightmap
